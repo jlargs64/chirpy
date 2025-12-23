@@ -16,6 +16,9 @@ func main() {
 		Handler: mux,
 	}
 
+	mux.Handle("/", http.FileServer(http.Dir(".")))
+	mux.Handle("/assets", http.FileServer(http.Dir("./assets/")))
+
 	log.Println("Serving on port:", port)
 	if err := server.ListenAndServe(); err != nil {
 		log.Fatal("server could not start: ", err)
