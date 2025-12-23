@@ -16,11 +16,20 @@ func main() {
 		Handler: mux,
 	}
 
-	mux.Handle("/", http.FileServer(http.Dir(".")))
-	mux.Handle("/assets", http.FileServer(http.Dir("./assets/")))
+	mux.Handle("/app/", http.StripPrefix("/app/", http.FileServer(http.Dir("."))))
 
+	mux.HandleFunc("/healthz", handlerReadiness)
 	log.Println("Serving on port:", port)
 	if err := server.ListenAndServe(); err != nil {
 		log.Fatal("server could not start: ", err)
+	}
+}
+
+func handlerReadiness(w http.ResponseWriter, r *http.Request) {
+	w.Header().Add("Content-Type", "text/plain; charset=utf-8")
+	w.WriteHeader(http.StatusOK)
+	_, err := w.Write([]byte(http.StatusText(http.StatusOK)))
+	if err != nil {
+		log.Println("handlerReadiness failed to write:", err)
 	}
 }
