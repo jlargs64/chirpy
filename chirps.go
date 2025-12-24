@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"log"
 	"net/http"
 )
 
@@ -17,47 +16,21 @@ type validationSuccessRep struct {
 	Valid bool `json:"valid"`
 }
 
-func sendValidationError(w http.ResponseWriter, statusCode int, errMsg string) {
-	w.WriteHeader(statusCode)
-	errBytes, err := json.Marshal(&validationErrResp{Error: errMsg})
-	if err != nil {
-		log.Println("could not create err resp:", err)
-		return
-	}
-	_, err = w.Write(errBytes)
-	if err != nil {
-		log.Println("could not create err resp:", err)
-		return
-	}
-}
-
 func HandlerValidateChirp(w http.ResponseWriter, req *http.Request) {
 	decoder := json.NewDecoder(req.Body)
 	params := validationReq{}
 	err := decoder.Decode(&params)
 	if err != nil {
-		sendValidationError(w, http.StatusInternalServerError, "Body could not be read correctly")
+		respondWithError(w, http.StatusInternalServerError, "Bad JSON format", err)
 		return
 	}
 
 	// Validate chirp
 	if len(params.Body) > 140 {
-		sendValidationError(w, http.StatusBadRequest, "Chirp is too long")
+		respondWithError(w, http.StatusBadRequest, "Chirp is too long", err)
 		return
 	}
 
-	w.WriteHeader(http.StatusOK)
 	successResp := validationSuccessRep{Valid: true}
-	successBytes, err := json.Marshal(&successResp)
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		log.Println("could not create success resp:", err)
-		return
-	}
-	_, err = w.Write(successBytes)
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		log.Println("could not create success resp:", err)
-		return
-	}
+	respondWithJSON(w, http.StatusOK, successResp)
 }
