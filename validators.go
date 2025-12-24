@@ -5,10 +5,6 @@ import (
 	"net/http"
 )
 
-type validationErrResp struct {
-	Error string `json:"error"`
-}
-
 type validationReq struct {
 	Body string `json:"body"`
 }
