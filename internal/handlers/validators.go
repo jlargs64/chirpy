@@ -1,9 +1,11 @@
-package main
+package handlers
 
 import (
 	"encoding/json"
 	"net/http"
 	"strings"
+
+	"github.com/jlargs64/chirpy/internal/utils"
 )
 
 type validationReq struct {
@@ -18,13 +20,13 @@ func HandlerValidateChirp(w http.ResponseWriter, req *http.Request) {
 	params := validationReq{}
 	err := decoder.Decode(&params)
 	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, "Bad JSON format", err)
+		utils.RespondWithError(w, http.StatusInternalServerError, "Bad JSON format", err)
 		return
 	}
 
 	// Validate chirp
 	if len(params.Body) > 140 {
-		respondWithError(w, http.StatusBadRequest, "Chirp is too long", err)
+		utils.RespondWithError(w, http.StatusBadRequest, "Chirp is too long", err)
 		return
 	}
 
@@ -38,5 +40,5 @@ func HandlerValidateChirp(w http.ResponseWriter, req *http.Request) {
 	cleanedChirp := strings.Join(chirpSplit, " ")
 
 	successResp := validationSuccessRep{CleanedBody: cleanedChirp}
-	respondWithJSON(w, http.StatusOK, successResp)
+	utils.RespondWithJSON(w, http.StatusOK, successResp)
 }

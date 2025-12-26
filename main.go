@@ -1,21 +1,33 @@
 package main
 
 import (
+	"database/sql"
 	"log"
 	"net/http"
+	"os"
 	"sync/atomic"
+
+	_ "github.com/lib/pq"
+
+	"github.com/jlargs64/chirpy/internal/database"
+	"github.com/jlargs64/chirpy/internal/handlers"
 )
 
-type apiConfig struct {
-	fileserverHits atomic.Int32
-}
-
 func main() {
+	// Init vars
 	const port = "8080"
-	apiCfg := apiConfig{
-		fileserverHits: atomic.Int32{},
+	dbURL := os.Getenv("DB_URL")
+	db, err := sql.Open("postgres", dbURL)
+	if err != nil {
+		log.Fatal("Could not access database:", err)
 	}
 
+	apiCfg := handlers.APIConfig{
+		FileserverHits: atomic.Int32{},
+		DBQueries:      database.New(db),
+	}
+
+	// Start server
 	log.Println("Starting server...")
 
 	mux := http.NewServeMux()
@@ -24,15 +36,16 @@ func main() {
 		Handler: mux,
 	}
 
+	// Create app routes
 	mux.Handle("/app/", http.StripPrefix("/app/",
-		apiCfg.middlewareMetricsInc(http.FileServer(http.Dir(".")))))
-	// API
-	mux.HandleFunc("GET /api/healthz", HandlerReadiness)
-	mux.HandleFunc("POST /api/validate_chirp", HandlerValidateChirp)
+		apiCfg.MiddlewareMetricsInc(http.FileServer(http.Dir(".")))))
+	// Create API routes
+	mux.HandleFunc("GET /api/healthz", handlers.HandlerReadiness)
+	mux.HandleFunc("POST /api/validate_chirp", handlers.HandlerValidateChirp)
 
-	// Admin
-	mux.Handle("GET /admin/metrics", http.HandlerFunc(apiCfg.handlerMetrics))
-	mux.HandleFunc("POST /admin/reset", apiCfg.handlerMetricsReset)
+	// Create Admin routes
+	mux.Handle("GET /admin/metrics", http.HandlerFunc(apiCfg.HandlerMetrics))
+	mux.HandleFunc("POST /admin/reset", apiCfg.HandlerMetricsReset)
 
 	log.Println("Serving on port:", port)
 	if err := server.ListenAndServe(); err != nil {
