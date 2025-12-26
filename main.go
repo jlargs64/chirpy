@@ -7,6 +7,7 @@ import (
 	"os"
 	"sync/atomic"
 
+	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
 
 	"github.com/jlargs64/chirpy/internal/database"
@@ -14,9 +15,15 @@ import (
 )
 
 func main() {
+	// Init env
+	err := godotenv.Load(".env")
+	if err != nil {
+		log.Fatal("could not read env file", err)
+	}
 	// Init vars
 	const port = "8080"
 	dbURL := os.Getenv("DB_URL")
+	platform := os.Getenv("PLATFORM")
 	db, err := sql.Open("postgres", dbURL)
 	if err != nil {
 		log.Fatal("Could not access database:", err)
@@ -25,6 +32,7 @@ func main() {
 	apiCfg := handlers.APIConfig{
 		FileserverHits: atomic.Int32{},
 		DBQueries:      database.New(db),
+		Platform:       platform,
 	}
 
 	// Start server
@@ -42,10 +50,11 @@ func main() {
 	// Create API routes
 	mux.HandleFunc("GET /api/healthz", handlers.HandlerReadiness)
 	mux.HandleFunc("POST /api/validate_chirp", handlers.HandlerValidateChirp)
+	mux.HandleFunc("POST /api/users", apiCfg.HandleCreateUser)
 
 	// Create Admin routes
 	mux.Handle("GET /admin/metrics", http.HandlerFunc(apiCfg.HandlerMetrics))
-	mux.HandleFunc("POST /admin/reset", apiCfg.HandlerMetricsReset)
+	mux.HandleFunc("POST /admin/reset", apiCfg.HandlerReset)
 
 	log.Println("Serving on port:", port)
 	if err := server.ListenAndServe(); err != nil {

@@ -3,8 +3,9 @@ package handlers
 
 import (
 	"fmt"
-	"log"
 	"net/http"
+
+	"github.com/jlargs64/chirpy/internal/utils"
 )
 
 func (config *APIConfig) MiddlewareMetricsInc(next http.Handler) http.Handler {
@@ -26,19 +27,7 @@ func (config *APIConfig) HandlerMetrics(w http.ResponseWriter, req *http.Request
 
 	_, err := w.Write([]byte(html))
 	if err != nil {
-		log.Println("there was an error getting metrics:", err)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-}
-
-func (config *APIConfig) HandlerMetricsReset(w http.ResponseWriter, req *http.Request) {
-	w.WriteHeader(http.StatusOK)
-	config.FileserverHits.Store(0)
-	_, err := w.Write([]byte(http.StatusText(http.StatusOK)))
-	if err != nil {
-		log.Println("there was an error resetting metrics:", err)
-		w.WriteHeader(http.StatusInternalServerError)
+		utils.RespondWithError(w, http.StatusInternalServerError, "could not get metriccs", err)
 		return
 	}
 }

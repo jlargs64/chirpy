@@ -12,11 +12,11 @@ import (
 const createUser = `-- name: CreateUser :one
 INSERT INTO users (
     id,
-    createdat,
-    updatedat,
+    created_at,
+    updated_at,
     email
-) VALUES (get_random_uuid(), now(), now(), $1)
-RETURNING id, email, createdat, updatedat
+) VALUES (gen_random_uuid(), now(), now(), $1)
+RETURNING id, email, created_at, updated_at
 `
 
 func (q *Queries) CreateUser(ctx context.Context, email string) (User, error) {
@@ -25,8 +25,17 @@ func (q *Queries) CreateUser(ctx context.Context, email string) (User, error) {
 	err := row.Scan(
 		&i.ID,
 		&i.Email,
-		&i.Createdat,
-		&i.Updatedat,
+		&i.CreatedAt,
+		&i.UpdatedAt,
 	)
 	return i, err
+}
+
+const resetUsers = `-- name: ResetUsers :exec
+DELETE FROM users
+`
+
+func (q *Queries) ResetUsers(ctx context.Context) error {
+	_, err := q.db.ExecContext(ctx, resetUsers)
+	return err
 }
