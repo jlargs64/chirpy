@@ -22,6 +22,13 @@ func (config *APIConfig) HandlerReset(w http.ResponseWriter, req *http.Request) 
 		return
 	}
 
+	// Reset chirps
+	err = config.DBQueries.ResetChirps(req.Context())
+	if err != nil {
+		utils.RespondWithError(w, http.StatusForbidden, "chirps could not be reset", err)
+		return
+	}
+
 	// Write message back to admin
 	_, err = w.Write([]byte(http.StatusText(http.StatusOK)))
 	if err != nil {
