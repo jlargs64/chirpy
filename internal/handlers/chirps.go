@@ -16,12 +16,32 @@ type createChirpRequest struct {
 	UserID uuid.UUID `json:"user_id"`
 }
 
-type createChirpResponse struct {
+type chirpResponse struct {
 	ID        uuid.UUID `json:"id"`
 	UserID    uuid.UUID `json:"user_id"`
 	Body      string    `json:"body"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
+}
+
+func (config *APIConfig) HandleGetChirps(w http.ResponseWriter, req *http.Request) {
+	chirps, err := config.DBQueries.GetChirps(req.Context())
+	if err != nil {
+		utils.RespondWithError(w, http.StatusInternalServerError, "there was an error getting all chirps from the database", err)
+		return
+	}
+
+	chripResp := make([]chirpResponse, len(chirps))
+	for i, chirp := range chirps {
+		chripResp[i] = chirpResponse{
+			ID:        chirp.ID,
+			UserID:    chirp.UserID,
+			Body:      chirp.Body,
+			CreatedAt: chirp.CreatedAt,
+			UpdatedAt: chirp.UpdatedAt,
+		}
+	}
+	utils.RespondWithJSON(w, http.StatusOK, chripResp)
 }
 
 func (config *APIConfig) HandleCreateChrip(w http.ResponseWriter, req *http.Request) {
@@ -59,7 +79,7 @@ func (config *APIConfig) HandleCreateChrip(w http.ResponseWriter, req *http.Requ
 		return
 	}
 
-	utils.RespondWithJSON(w, http.StatusCreated, &createChirpResponse{
+	utils.RespondWithJSON(w, http.StatusCreated, &chirpResponse{
 		ID:        chirp.ID,
 		UserID:    chirp.UserID,
 		Body:      chirp.Body,
