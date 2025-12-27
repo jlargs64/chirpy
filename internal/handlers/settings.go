@@ -10,4 +10,5 @@ type APIConfig struct {
 	FileserverHits atomic.Int32
 	DBQueries      *database.Queries
 	Platform       string
+	SigningKey     []byte
 }

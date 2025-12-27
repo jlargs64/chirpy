@@ -24,6 +24,7 @@ func main() {
 	const port = "8080"
 	dbURL := os.Getenv("DB_URL")
 	platform := os.Getenv("PLATFORM")
+	signingKey := []byte(os.Getenv("SIGNING_KEY"))
 	db, err := sql.Open("postgres", dbURL)
 	if err != nil {
 		log.Fatal("Could not access database:", err)
@@ -33,6 +34,7 @@ func main() {
 		FileserverHits: atomic.Int32{},
 		DBQueries:      database.New(db),
 		Platform:       platform,
+		SigningKey:     signingKey,
 	}
 
 	// Start server
@@ -51,6 +53,7 @@ func main() {
 	mux.HandleFunc("GET /api/healthz", handlers.HandlerReadiness)
 	// Users
 	mux.HandleFunc("POST /api/users", apiCfg.HandleCreateUser)
+	mux.HandleFunc("POST /api/login", apiCfg.HandleLogin)
 
 	// Chirps
 	mux.HandleFunc("GET /api/chirps", apiCfg.HandleGetChirps)

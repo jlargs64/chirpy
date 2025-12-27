@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/jlargs64/chirpy/internal/auth"
 	"github.com/jlargs64/chirpy/internal/database"
 	"github.com/jlargs64/chirpy/internal/utils"
 )
@@ -91,6 +92,18 @@ func (config *APIConfig) HandleCreateChrip(w http.ResponseWriter, req *http.Requ
 		return
 	}
 
+	// Check user authorization
+	bearerToken, err := auth.GetBearerToken(req.Header)
+	if err != nil {
+		utils.RespondWithError(w, http.StatusUnauthorized, "user is unauthorized", err)
+		return
+	}
+	userID, err := auth.ValidateJWT(bearerToken, string(config.SigningKey))
+	if err != nil {
+		utils.RespondWithError(w, http.StatusUnauthorized, "user is unauthorized", err)
+		return
+	}
+
 	// Validate chirp
 	if len(params.Body) > 140 {
 		utils.RespondWithError(w, http.StatusBadRequest, "Chirp is too long", err)
@@ -109,7 +122,7 @@ func (config *APIConfig) HandleCreateChrip(w http.ResponseWriter, req *http.Requ
 	// Create the chirp
 	chirpDBParams := database.CreateChirpParams{
 		Body:   cleanedChirp,
-		UserID: params.UserID,
+		UserID: userID,
 	}
 	chirp, err := config.DBQueries.CreateChirp(req.Context(), chirpDBParams)
 	if err != nil {
