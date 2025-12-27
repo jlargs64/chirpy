@@ -54,6 +54,7 @@ func main() {
 
 	// Chirps
 	mux.HandleFunc("GET /api/chirps", apiCfg.HandleGetChirps)
+	mux.HandleFunc("GET /api/chirps/{chirpId}", apiCfg.HandleGetChirpByID)
 	mux.HandleFunc("POST /api/chirps", apiCfg.HandleCreateChrip)
 
 	// Create Admin routes

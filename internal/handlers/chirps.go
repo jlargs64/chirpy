@@ -1,7 +1,9 @@
 package handlers
 
 import (
+	"database/sql"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"strings"
 	"time"
@@ -42,6 +44,42 @@ func (config *APIConfig) HandleGetChirps(w http.ResponseWriter, req *http.Reques
 		}
 	}
 	utils.RespondWithJSON(w, http.StatusOK, chripResp)
+}
+
+func (config *APIConfig) HandleGetChirpByID(w http.ResponseWriter, req *http.Request) {
+	chirpID := req.PathValue("chirpId")
+	if len(chirpID) == 0 {
+		utils.RespondWithError(
+			w,
+			http.StatusBadRequest,
+			"no chirp id provided in req",
+			errors.New("no chirp id provided in req"))
+		return
+	}
+
+	chirpUUID, err := uuid.Parse(chirpID)
+	if err != nil {
+		utils.RespondWithError(w, http.StatusBadRequest, "chirp id is not a valid uuid", err)
+		return
+	}
+	chirp, err := config.DBQueries.GetChirpById(req.Context(), chirpUUID)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			utils.RespondWithError(w, http.StatusNotFound, "chirp could not be found", err)
+		} else {
+			utils.RespondWithError(w, http.StatusBadRequest, "chirp could not be retrieved from the db", err)
+		}
+		return
+	}
+
+	utils.RespondWithJSON(w, http.StatusOK,
+		&chirpResponse{
+			ID:        chirp.ID,
+			UserID:    chirp.UserID,
+			Body:      chirp.Body,
+			CreatedAt: chirp.CreatedAt,
+			UpdatedAt: chirp.UpdatedAt,
+		})
 }
 
 func (config *APIConfig) HandleCreateChrip(w http.ResponseWriter, req *http.Request) {
