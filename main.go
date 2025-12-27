@@ -51,9 +51,12 @@ func main() {
 		apiCfg.MiddlewareMetricsInc(http.FileServer(http.Dir(".")))))
 	// Create API routes
 	mux.HandleFunc("GET /api/healthz", handlers.HandlerReadiness)
+
 	// Users
 	mux.HandleFunc("POST /api/users", apiCfg.HandleCreateUser)
 	mux.HandleFunc("POST /api/login", apiCfg.HandleLogin)
+	mux.HandleFunc("POST /api/refresh", apiCfg.HandleRefreshToken)
+	mux.HandleFunc("POST /api/revoke", apiCfg.HandleRefreshRevoke)
 
 	// Chirps
 	mux.HandleFunc("GET /api/chirps", apiCfg.HandleGetChirps)
