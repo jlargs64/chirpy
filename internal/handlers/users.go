@@ -12,10 +12,11 @@ import (
 )
 
 type User struct {
-	ID        uuid.UUID `json:"id"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
-	Email     string    `json:"email"`
+	ID          uuid.UUID `json:"id"`
+	CreatedAt   time.Time `json:"created_at"`
+	UpdatedAt   time.Time `json:"updated_at"`
+	Email       string    `json:"email"`
+	IsChirpyRed bool      `json:"is_chirpy_red"`
 }
 
 type userReqParams struct {
@@ -50,10 +51,11 @@ func (config *APIConfig) HandleCreateUser(w http.ResponseWriter, req *http.Reque
 	}
 
 	user := &User{
-		ID:        dbUser.ID,
-		Email:     dbUser.Email,
-		CreatedAt: dbUser.CreatedAt,
-		UpdatedAt: dbUser.UpdatedAt,
+		ID:          dbUser.ID,
+		Email:       dbUser.Email,
+		CreatedAt:   dbUser.CreatedAt,
+		UpdatedAt:   dbUser.UpdatedAt,
+		IsChirpyRed: dbUser.IsChirpyRed,
 	}
 	utils.RespondWithJSON(w, http.StatusCreated, user)
 }
@@ -97,10 +99,11 @@ func (config *APIConfig) HandleChangeUser(w http.ResponseWriter, req *http.Reque
 	}
 
 	user := &User{
-		ID:        updatedUser.ID,
-		Email:     updatedUser.Email,
-		CreatedAt: updatedUser.CreatedAt,
-		UpdatedAt: updatedUser.UpdatedAt,
+		ID:          updatedUser.ID,
+		Email:       updatedUser.Email,
+		CreatedAt:   updatedUser.CreatedAt,
+		UpdatedAt:   updatedUser.UpdatedAt,
+		IsChirpyRed: updatedUser.IsChirpyRed,
 	}
 	utils.RespondWithJSON(w, http.StatusOK, user)
 }

@@ -59,10 +59,14 @@ func main() {
 	mux.HandleFunc("POST /api/refresh", apiCfg.HandleRefreshToken)
 	mux.HandleFunc("POST /api/revoke", apiCfg.HandleRefreshRevoke)
 
+	// Webhooks
+	mux.HandleFunc("POST /api/polka/webhooks", apiCfg.HandlePolkaWebhook)
+
 	// Chirps
 	mux.HandleFunc("GET /api/chirps", apiCfg.HandleGetChirps)
-	mux.HandleFunc("GET /api/chirps/{chirpId}", apiCfg.HandleGetChirpByID)
+	mux.HandleFunc("GET /api/chirps/{chirpID}", apiCfg.HandleGetChirpByID)
 	mux.HandleFunc("POST /api/chirps", apiCfg.HandleCreateChrip)
+	mux.HandleFunc("DELETE /api/chirps/{chirpID}", apiCfg.HandleDeleteChirps)
 
 	// Create Admin routes
 	mux.Handle("GET /admin/metrics", http.HandlerFunc(apiCfg.HandlerMetrics))

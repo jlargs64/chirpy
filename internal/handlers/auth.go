@@ -21,6 +21,7 @@ type loginReq struct {
 type loginResp struct {
 	ID           uuid.UUID `json:"id"`
 	Email        string    `json:"email"`
+	IsChirpyRed  bool      `json:"is_chirpy_red"`
 	CreatedAt    time.Time `json:"created_at"`
 	Updatedat    time.Time `json:"updated_at"`
 	Token        string    `json:"token"`
@@ -86,6 +87,7 @@ func (config *APIConfig) HandleLogin(w http.ResponseWriter, req *http.Request) {
 	utils.RespondWithJSON(w, http.StatusOK, &loginResp{
 		ID:           user.ID,
 		Email:        user.Email,
+		IsChirpyRed:  user.IsChirpyRed,
 		CreatedAt:    user.CreatedAt,
 		Updatedat:    user.UpdatedAt,
 		Token:        token,

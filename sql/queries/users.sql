@@ -4,8 +4,9 @@ INSERT INTO users (
     created_at,
     updated_at,
     email,
-    hashed_password
-) VALUES (gen_random_uuid(), now(), now(), $1, $2)
+    hashed_password,
+    is_chirpy_red
+) VALUES (gen_random_uuid(), now(), now(), $1, $2, false)
 RETURNING *;
 
 -- name: ResetUsers :exec
@@ -25,4 +26,10 @@ WHERE id = $1;
 UPDATE users
 SET email = $1, hashed_password = $2, updated_at = now()
 WHERE id = $3
+RETURNING *;
+
+-- name: UpgradeUserToChirpyRed :one
+UPDATE users
+SET is_chirpy_red = true
+WHERE id = $1
 RETURNING *;

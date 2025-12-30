@@ -48,7 +48,7 @@ func (config *APIConfig) HandleGetChirps(w http.ResponseWriter, req *http.Reques
 }
 
 func (config *APIConfig) HandleGetChirpByID(w http.ResponseWriter, req *http.Request) {
-	chirpID := req.PathValue("chirpId")
+	chirpID := req.PathValue("chirpID")
 	if len(chirpID) == 0 {
 		utils.RespondWithError(
 			w,
@@ -137,4 +137,56 @@ func (config *APIConfig) HandleCreateChrip(w http.ResponseWriter, req *http.Requ
 		CreatedAt: chirp.CreatedAt,
 		UpdatedAt: chirp.UpdatedAt,
 	})
+}
+
+func (config *APIConfig) HandleDeleteChirps(w http.ResponseWriter, req *http.Request) {
+	// Get chirp to delete id
+	chirpID := req.PathValue("chirpID")
+	if len(chirpID) == 0 {
+		utils.RespondWithError(w, http.StatusBadRequest, "missing chirp id", errors.New("missing chirp id"))
+		return
+	}
+	chirpUUID, err := uuid.Parse(chirpID)
+	if err != nil {
+
+		utils.RespondWithError(w, http.StatusBadRequest, "bad chirp id provided", err)
+		return
+	}
+	// Check user authorization
+	bearerToken, err := auth.GetBearerToken(req.Header)
+	if err != nil {
+		utils.RespondWithError(w, http.StatusUnauthorized, "user is unauthorized", err)
+		return
+	}
+	userID, err := auth.ValidateJWT(bearerToken, string(config.SigningKey))
+	if err != nil {
+		utils.RespondWithError(w, http.StatusUnauthorized, "user is unauthorized", err)
+		return
+	}
+
+	// Check if chirp exists
+	_, err = config.DBQueries.GetChirpById(req.Context(), chirpUUID)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			utils.RespondWithError(w, http.StatusNotFound, "chirp not found", err)
+		} else {
+			utils.RespondWithError(w, http.StatusInternalServerError, "db error could not get chirp", err)
+		}
+		return
+	}
+
+	rowsAffected, err := config.DBQueries.DeleteChirpById(req.Context(), database.DeleteChirpByIdParams{
+		ID:     chirpUUID,
+		UserID: userID,
+	})
+	if err != nil {
+		utils.RespondWithError(w, http.StatusInternalServerError, "unable to delete chirp", err)
+		return
+	}
+	if rowsAffected == 0 {
+
+		utils.RespondWithError(w, http.StatusForbidden, "chirp not found or not owned by user", errors.New("user does not own chirp"))
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
 }
