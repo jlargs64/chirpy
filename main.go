@@ -25,6 +25,7 @@ func main() {
 	dbURL := os.Getenv("DB_URL")
 	platform := os.Getenv("PLATFORM")
 	signingKey := []byte(os.Getenv("SIGNING_KEY"))
+	polkaAPIKey := os.Getenv("POLKA_API_KEY")
 	db, err := sql.Open("postgres", dbURL)
 	if err != nil {
 		log.Fatal("Could not access database:", err)
@@ -35,6 +36,7 @@ func main() {
 		DBQueries:      database.New(db),
 		Platform:       platform,
 		SigningKey:     signingKey,
+		PolkaAPIKey:    polkaAPIKey,
 	}
 
 	// Start server

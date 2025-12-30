@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/google/uuid"
+	"github.com/jlargs64/chirpy/internal/auth"
 	"github.com/jlargs64/chirpy/internal/utils"
 )
 
@@ -15,10 +16,20 @@ type webhookEvent struct {
 }
 
 func (config *APIConfig) HandlePolkaWebhook(w http.ResponseWriter, req *http.Request) {
+	// Check authorization
+	apiKey, err := auth.GetAPIKey(req.Header)
+	if err != nil {
+		utils.RespondWithError(w, http.StatusUnauthorized, "missing api key", err)
+		return
+	}
+	if apiKey != config.PolkaAPIKey {
+		utils.RespondWithError(w, http.StatusUnauthorized, "bad api key", err)
+		return
+	}
 	// Parse webhook response
 	decoder := json.NewDecoder(req.Body)
 	var event webhookEvent
-	err := decoder.Decode(&event)
+	err = decoder.Decode(&event)
 	if err != nil {
 		utils.RespondWithError(w, http.StatusBadRequest, "the webhook event schema was not in the expected format", err)
 		return
